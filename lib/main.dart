@@ -42,7 +42,7 @@ class _MyAppState extends State<MyApp> {
   dynamic _launchURLBrowser(Uri url) async {
     var withHttps = Uri.https(url.authority, url.path);
     if (await canLaunchUrl(withHttps)) {
-      await launchUrl(withHttps);
+      await launchUrl(withHttps, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $withHttps';
     }
