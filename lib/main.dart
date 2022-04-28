@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 import './models/bookmark.dart';
 
@@ -37,6 +39,15 @@ class _MyAppState extends State<MyApp> {
     futureUrls = fetchUrls();
   }
 
+  dynamic _launchURLBrowser(Uri url) async {
+    var withHttps = Uri.https(url.authority, url.path);
+    if (await canLaunchUrl(withHttps)) {
+      await launchUrl(withHttps);
+    } else {
+      throw 'Could not launch $withHttps';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -61,16 +72,16 @@ class _MyAppState extends State<MyApp> {
                         } else {
                           _titleStyle = _biggerFont;
                         }
-                        return Container(
-                          height: 75,
-                          padding: const EdgeInsets.all(8.0),
-                          margin: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(
-                                    color: Theme.of(context).dividerColor)),
-                          ),
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 5, horizontal: 10),
+                          elevation: 5,
                           child: ListTile(
+                              leading: IconButton(
+                                icon: const Icon(Icons.link),
+                                onPressed: () async => await _launchURLBrowser(
+                                    Uri.parse(urls[index].url)),
+                              ),
                               title: Text(
                                 urls[index].url,
                                 style: _titleStyle,
