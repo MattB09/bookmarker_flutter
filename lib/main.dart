@@ -3,52 +3,16 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
-Future<List<UrlData>> fetchUrls() async {
+import './models/bookmark.dart';
+
+Future<List<Bookmark>> fetchUrls() async {
   final response =
       await http.get(Uri.parse('https://apimocha.com/bookmarker/urls'));
   if (response.statusCode == 200) {
     List<dynamic> jsonResponse = jsonDecode(response.body)['items'];
-    return jsonResponse.map((data) => UrlData.fromJson(data)).toList();
+    return jsonResponse.map((data) => Bookmark.fromJson(data)).toList();
   } else {
     throw Exception('Error fetching urls...');
-  }
-}
-
-class Tag {
-  final String id;
-  final String name;
-
-  Tag({required this.id, required this.name});
-}
-
-class UrlData {
-  final String id;
-  final bool isArchived;
-  final bool isRead;
-  final String? note;
-  final List tags;
-  final String title;
-  final String url;
-
-  UrlData(
-      {required this.id,
-      required this.isArchived,
-      required this.isRead,
-      this.note,
-      required this.tags,
-      required this.title,
-      required this.url});
-
-  factory UrlData.fromJson(Map<String, dynamic> json) {
-    return UrlData(
-      id: json['id'],
-      isArchived: json['is_archived'],
-      isRead: json['is_read'],
-      note: json['note'],
-      tags: json['tags'],
-      title: json['title'],
-      url: json['url'],
-    );
   }
 }
 
@@ -64,7 +28,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<List<UrlData>> futureUrls;
+  late Future<List<Bookmark>> futureUrls;
   final TextStyle _biggerFont = const TextStyle(fontSize: 18.0);
 
   @override
@@ -82,11 +46,11 @@ class _MyAppState extends State<MyApp> {
               title: const Text('Bookmarker'),
             ),
             body: Center(
-              child: FutureBuilder<List<UrlData>>(
+              child: FutureBuilder<List<Bookmark>>(
                 future: futureUrls,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    List<UrlData> urls = snapshot.data!;
+                    List<Bookmark> urls = snapshot.data!;
                     return ListView.builder(
                       itemCount: urls.length,
                       itemBuilder: (BuildContext context, int index) {
@@ -100,29 +64,37 @@ class _MyAppState extends State<MyApp> {
                         return Container(
                           height: 75,
                           padding: const EdgeInsets.all(8.0),
+                          margin: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             border: Border(
                                 bottom: BorderSide(
                                     color: Theme.of(context).dividerColor)),
                           ),
-                          child: Column(
-                            children: [
-                              Text(
+                          child: ListTile(
+                              title: Text(
                                 urls[index].url,
                                 style: _titleStyle,
                               ),
-                              if (urls[index].note != null)
-                                Text(
-                                  urls[index].note!,
-                                  textAlign: TextAlign.left,
-                                ),
-                              //if (urls[index].tags.isNotEmpty)
+                              subtitle: (urls[index].note != null)
+                                  ? Text(
+                                      urls[index].note!,
+                                      textAlign: TextAlign.left,
+                                    )
+                                  : null,
+                              trailing: (urls[index].tags.isNotEmpty)
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: urls[index].tags.map((tag) {
+                                        return Chip(
+                                          label: Text(tag.name),
+                                        );
+                                      }).toList(),
+                                    )
+                                  : null
                               //for (dynamic tag in urls[index].tags)
                               //Text(tag.name!.toString())
-                            ],
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                          ),
+                              ),
                         );
                       },
                     );
